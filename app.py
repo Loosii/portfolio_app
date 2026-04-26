@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
+from data_layer import get_prices, extract_prices
 
 st.set_page_config(page_title="Portfolio Analyzer", layout="wide")
 
@@ -28,30 +29,8 @@ if uploaded_file:
     # 📡 Preise holen
     # =========================
 
-    fx = yf.Ticker("EURUSD=X")
-    eur_usd = fx.history(period="1d")["Close"].iloc[-1]
-    usd_to_eur = 1 / eur_usd
-
-    @st.cache_data(ttl=300)
-    def load_prices(assets):
-        return yf.download(
-            tickers=" ".join(assets),
-            period="1d",
-            group_by="ticker",
-            threads=False
-        )
-    
-    data = load_prices(df["asset"].tolist())
-
-    prices = []
-
-    for asset in df["asset"]:
-        try:
-            price = data[asset]["Close"].iloc[-1]
-        except:
-            price = None
-
-        prices.append(price)
+    data = get_prices(df["asset"].tolist())
+    prices = extract_prices(data, df["asset"].tolist())
 
     df["current_price"] = prices
 
