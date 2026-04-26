@@ -7,6 +7,14 @@ st.set_page_config(page_title="Portfolio Analyzer", layout="wide")
 
 st.title("📊 Portfolio Analyzer")
 
+st.sidebar.title("🔐 Login")
+
+username = st.sidebar.text_input("Username")
+
+if not username:
+    st.warning("Bitte Username eingeben")
+    st.stop()
+
 # =========================
 # 📂 CSV Upload
 # =========================
@@ -105,6 +113,25 @@ if uploaded_file:
     df["target_weight"] = df["asset"].map(targets)
     df["diff"] = df["target_weight"] - df["weight"]
     df["rebalance_value"] = df["diff"] / 100 * total_value
+
+    import os
+
+    save_path = f"data/{username}.csv"
+
+    #Ordner erstellen falls nicht existiert
+    os.makedirs("data", exist_ok=True)
+
+
+    #Speichern Session-State
+    if "portfolio" not in st.session_state:
+        st.session_state["portfolio"] = None
+
+    if st.button("💾 speichern"):
+        st.session_state["portfolio"] = df
+
+    if st.button("📂 laden"):
+        if st.session_state["portfolio"] is not None:
+            df = st.session_state["portfolio"]
 
     # =========================
     # 🖥️ UI (nur Anzeige!)
