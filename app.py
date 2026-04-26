@@ -163,6 +163,56 @@ if uploaded_file:
     else:
         insights.append("⚠️ Rendite im Verhältnis zum Risiko eher schwach")
 
+    #Score-System
+    recommendations = []
+
+    for _, row in df.iterrows():
+
+        score = 0
+        reasons = []
+
+        # 🎯 Abweichung vom Ziel
+        if row["diff"] < -5:
+            score += 2
+            reasons.append("übergewichtet")
+
+        elif row["diff"] > 5:
+            score += 2
+            reasons.append("untergewichtet")
+
+        # 🧠 Konzentration
+        if row["weight"] > 40:
+            score += 2
+            reasons.append("sehr große Position")
+
+        elif row["weight"] > 25:
+            score += 1
+            reasons.append("dominante Position")
+
+        # ⚠️ globales Risiko berücksichtigen
+        if volatility > 0.25:
+            score += 1
+            reasons.append("hohe Gesamtvolatilität")
+
+        # 👉 Entscheidung ableiten
+        if score >= 3:
+
+            if row["diff"] < 0:
+                action = "🔻 Reduzieren"
+            else:
+                action = "🟢 Aufstocken"
+
+            recommendations.append({
+                "asset": row["asset"],
+                "action": action,
+                "value": abs(row["rebalance_value"]),
+                "reasons": reasons,
+                "score": score
+            })
+
+    recommendations = sorted(recommendations, key=lambda x: x["score"], reverse=True)
+
+
     # =========================
     # 🖥️ UI (nur Anzeige!)
     # =========================
@@ -216,3 +266,20 @@ if uploaded_file:
 
     for insight in insights:
         st.write(insight)
+
+    st.subheader("🤖 Smarte Empfehlungen")
+
+    if not recommendations:
+        st.success("✅ Dein Portfolio ist gut ausbalanciert")
+
+    for rec in recommendations:
+
+        st.markdown(f"### {rec['action']} {rec['asset']}")
+
+        st.write(f"💰 Betrag: {rec['value']:.0f} €")
+
+        st.write("📌 Gründe:")
+        for r in rec["reasons"]:
+            st.write(f"- {r}")
+
+        st.divider()
