@@ -65,20 +65,6 @@ if uploaded_file:
 
     df["weight"] = df["value"] / total_value * 100
     
-    returns = portfolio_history["total"].pct_change().dropna()
-
-    #Volitilität
-    volatility = returns.std() * (252 ** 0.5)
-
-    #MaxDradown
-    cum_max = portfolio_history["total"].cummax()
-    drawdown = (portfolio_history["total"] - cum_max) / cum_max
-    max_drawdown = drawdown.min()
-
-    #SharpeRatio
-    risk_free_rate = 0.02  # 2% angenommen
-    sharpe = (returns.mean() * 252 - risk_free_rate) / volatility
-
     st.subheader("📊 Übersicht")
 
     col1, col2, col3 = st.columns(3)
@@ -102,7 +88,19 @@ if uploaded_file:
 
     st.line_chart(portfolio_history["total"])
 
+    returns = portfolio_history["total"].pct_change().dropna()
 
+    #Volitilität
+    volatility = returns.std() * (252 ** 0.5)
+
+    #MaxDradown
+    cum_max = portfolio_history["total"].cummax()
+    drawdown = (portfolio_history["total"] - cum_max) / cum_max
+    max_drawdown = drawdown.min()
+
+    #SharpeRatio
+    risk_free_rate = 0.02  # 2% angenommen
+    sharpe = (returns.mean() * 252 - risk_free_rate) / volatility
 
     #Charts
     df = df.sort_values(by="value", ascending=False)
