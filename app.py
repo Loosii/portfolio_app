@@ -27,6 +27,11 @@ if uploaded_file:
     # =========================
     # 📡 Preise holen
     # =========================
+
+    fx = yf.Ticker("EURUSD=X")
+    eur_usd = fx.history(period="1d")["Close"].iloc[-1]
+    usd_to_eur = 1 / eur_usd
+
     prices = []
 
     for asset in df["asset"]:
@@ -35,6 +40,9 @@ if uploaded_file:
 
         if not data.empty:
             price = data["Close"].iloc[-1]
+            currency = ticker.info.get("currency", "USD")
+            if currency == "USD":
+                price = price * usd_to_eur
         else:
             price = None
 
@@ -121,7 +129,6 @@ if uploaded_file:
     #Ordner erstellen falls nicht existiert
     os.makedirs("data", exist_ok=True)
 
-
     #Speichern Session-State
     if "portfolio" not in st.session_state:
         st.session_state["portfolio"] = None
@@ -132,6 +139,45 @@ if uploaded_file:
     if st.button("📂 laden"):
         if st.session_state["portfolio"] is not None:
             df = st.session_state["portfolio"]
+
+    insights = []
+
+    max_weight = df["weight"].max()
+
+    if max_weight > 50:
+        insights.append("⚠️ Eine Position macht über 50% aus → hohes Klumpenrisiko")
+
+    elif max_weight > 30:
+        insights.append("⚠️ Eine Position ist sehr dominant (>30%)")
+    else:
+        insights.append("✅ Gute Verteilung ohne dominante Position")
+
+    if volatility > 0.3:
+        insights.append("⚠️ Sehr hohe Volatilität → stark schwankendes Portfolio")
+
+    elif volatility > 0.15:
+        insights.append("⚠️ Mittlere Volatilität")
+
+    else:
+        insights.append("✅ Niedrige Volatilität → stabiles Portfolio")
+
+    if max_drawdown < -0.4:
+        insights.append("⚠️ Großer historischer Verlust (>40%)")
+
+    elif max_drawdown < -0.2:
+        insights.append("⚠️ Moderater Drawdown")
+
+    else:
+        insights.append("✅ Geringe Rückschläge bisher")
+
+    if sharpe > 2:
+        insights.append("🔥 Sehr gute risikoadjustierte Rendite")
+
+    elif sharpe > 1:
+        insights.append("👍 Solide Rendite im Verhältnis zum Risiko")
+
+    else:
+        insights.append("⚠️ Rendite im Verhältnis zum Risiko eher schwach")
 
     # =========================
     # 🖥️ UI (nur Anzeige!)
@@ -180,3 +226,9 @@ if uploaded_file:
         for _, row in df.iterrows():
             action = "Kaufen" if row["rebalance_value"] > 0 else "Verkaufen"
             st.write(f"{action} {row['asset']} → {abs(row['rebalance_value']):.2f} €")
+
+    #🧠 Insights
+    st.subheader("🧠 Insights")
+
+    for insight in insights:
+        st.write(insight)
