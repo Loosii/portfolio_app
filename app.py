@@ -65,13 +65,7 @@ if uploaded_file:
 
     df["weight"] = df["value"] / total_value * 100
     
-    st.subheader("📊 Übersicht")
 
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("💰 Gesamtwert", f"{total_value:,.2f} €")
-    col2.metric("📈 Rendite", f"{return_pct:.2f} %")
-    col3.metric("⚠️ Volatilität", f"{volatility:.2%}")
 
     st.subheader("📈 Performance über Zeit")
 
@@ -101,6 +95,14 @@ if uploaded_file:
     #SharpeRatio
     risk_free_rate = 0.02  # 2% angenommen
     sharpe = (returns.mean() * 252 - risk_free_rate) / volatility
+
+    st.subheader("📊 Übersicht")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("💰 Gesamtwert", f"{total_value:,.2f} €")
+    col2.metric("📈 Rendite", f"{return_pct:.2f} %")
+    col3.metric("⚠️ Volatilität", f"{volatility:.2%}")
 
     #Charts
     df = df.sort_values(by="value", ascending=False)
