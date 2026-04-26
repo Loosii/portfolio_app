@@ -23,6 +23,14 @@ def get_portfolio_history(df, period="6mo"):
 
     return prices_df
 
+st.set_page_config(page_title="Portfolio Tool", layout="wide")
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("💰 Gesamtwert", f"{total_value:,.2f} €")
+col2.metric("📉 Rendite", f"{return_pct:.2f} %")
+col3.metric("⚠️ Volatilität", f"{volatility:.2%}")
+
 st.title("📊 Portfolio Analyse Tool")
 
 uploaded_file = st.file_uploader("Lade dein Portfolio (CSV)", type=["csv"])
