@@ -32,18 +32,19 @@ if uploaded_file:
     eur_usd = fx.history(period="1d")["Close"].iloc[-1]
     usd_to_eur = 1 / eur_usd
 
+    data = yf.download(
+    tickers=" ".join(df["asset"]),
+    period="1d",
+    group_by="ticker",
+    threads=False
+)
+    
     prices = []
 
     for asset in df["asset"]:
-        ticker = yf.Ticker(asset)
-        data = ticker.history(period="1d")
-
-        if not data.empty:
-            price = data["Close"].iloc[-1]
-            currency = ticker.info.get("currency", "USD")
-            if currency == "USD":
-                price = price * usd_to_eur
-        else:
+        try:
+            price = data[asset]["Close"].iloc[-1]
+        except:
             price = None
 
         prices.append(price)
