@@ -80,10 +80,10 @@ if uploaded_file:
 
     portfolio_history["total"] = portfolio_history.sum(axis=1)
         if not portfolio_history.empty:
-        returns = portfolio_history["total"].pct_change().dropna()
-        volatility = returns.std() * (252 ** 0.5)
+            returns = portfolio_history["total"].pct_change().dropna()
+            volatility = returns.std() * (252 ** 0.5)
         else:
-        volatility = 0
+            volatility = 0
 
     st.line_chart(portfolio_history["total"])
 
