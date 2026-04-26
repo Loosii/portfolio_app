@@ -32,13 +32,17 @@ if uploaded_file:
     eur_usd = fx.history(period="1d")["Close"].iloc[-1]
     usd_to_eur = 1 / eur_usd
 
-    data = yf.download(
-    tickers=" ".join(df["asset"]),
-    period="1d",
-    group_by="ticker",
-    threads=False
-)
+    @st.cache_data(ttl=300)
+    def load_prices(assets):
+        return yf.download(
+            tickers=" ".join(assets),
+            period="1d",
+            group_by="ticker",
+            threads=False
+        )
     
+    data = load_prices(df["asset"].tolist())
+
     prices = []
 
     for asset in df["asset"]:
