@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 from data_layer import get_prices, extract_prices
+from data_layer import build_portfolio_from_transactions
 
 st.set_page_config(page_title="Portfolio Analyzer", layout="wide")
 
@@ -19,20 +20,93 @@ if not username:
 # =========================
 # 📂 CSV Upload
 # =========================
-uploaded_file = st.file_uploader("CSV hochladen", type=["csv"])
+
+st.subheader("📂 Transaktionen hochladen")
+
+uploaded_file = st.file_uploader("CSV-Datei auswählen", type=["csv"])
 
 if uploaded_file:
 
-    df = pd.read_csv(uploaded_file)
+    # =========================
+    # 📥 CSV einlesen
+    # =========================
+    transactions = pd.read_csv(uploaded_file, sep=";")
 
     # =========================
-    # 📡 Preise holen
+    # 🔍 Debug (optional)
     # =========================
+    debug = st.checkbox("🔍 Debug anzeigen")
+
+    if debug:
+        st.write("Original Spalten:", transactions.columns)
+        st.write(transactions.head())
+
+    # =========================
+    # 🧼 Spalten bereinigen
+    # =========================
+    transactions.columns = transactions.columns.str.lower().str.strip()
+
+    # =========================
+    # 🔄 Spaltennamen mappen (falls nötig)
+    # =========================
+    transactions = transactions.rename(columns={
+        "transaction type": "type",
+        "typ": "type",
+        "stück": "shares",
+        "menge": "shares",
+        "preis": "price"
+    })
+
+    # =========================
+    # 🛡️ Validierung
+    # =========================
+    required_cols = ["date", "asset", "type", "shares", "price"]
+
+    missing = [col for col in required_cols if col not in transactions.columns]
+
+    if missing:
+        st.error(f"❌ Fehlende Spalten: {missing}")
+        st.write("Gefundene Spalten:", transactions.columns)
+        st.stop()
+
+    # =========================
+    # 🔧 Werte normalisieren
+    # =========================
+    transactions["type"] = transactions["type"].str.lower().str.strip()
+
+    transactions["type"] = transactions["type"].replace({
+        "kauf": "buy",
+        "verkauf": "sell"
+    })
+
+    # =========================
+    # 🧠 Debug nach Bereinigung
+    # =========================
+    if debug:
+        st.subheader("Nach Bereinigung")
+        st.write(transactions.head())
+        st.write("Unique types:", transactions["type"].unique())
+
+    # =========================
+    # ⚙️ Portfolio bauen
+    # =========================
+    df = build_portfolio_from_transactions(transactions)
+
+    # =========================
+    # 📡 Preise laden
+    # =========================
+    from data_layer import get_prices, extract_prices
 
     data = get_prices(df["asset"].tolist())
     prices = extract_prices(data, df["asset"].tolist())
 
     df["current_price"] = prices
+
+    # =========================
+    # 📊 Ergebnis anzeigen
+    # =========================
+    st.subheader("📊 Portfolio (berechnet aus Transaktionen)")
+    st.write(df)
 
     # =========================
     # 💶 Portfolio Berechnung
