@@ -9,7 +9,7 @@ import pandas as pd
 def get_prices(assets):
     data = yf.download(
         tickers=" ".join(assets),
-        period="1d",
+        period="5d",
         group_by="ticker",
         threads=False
     )
