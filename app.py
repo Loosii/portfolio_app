@@ -102,6 +102,17 @@ if uploaded_file:
 
     df["current_price"] = prices
 
+    # 🔧 Absicherung
+    if "current_price" not in df.columns:
+        st.error("❌ current_price fehlt")
+        st.stop()
+
+    df["current_price"] = pd.to_numeric(df["current_price"], errors="coerce")
+
+    if df["current_price"].isna().all():
+        st.error("❌ Keine Preise geladen (API Problem)")
+        st.stop()
+
     # =========================
     # 📊 Ergebnis anzeigen
     # =========================
